@@ -5,22 +5,20 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.kira.learn</groupId>
-    <artifactId>kira-leanr-dockerfile</artifactId>
+    <artifactId>kira-learn-dockerfile</artifactId>
     <version>1.0.0</version>
 
 
     <parent>
-        <artifactId>kira-boot-dependencies</artifactId>
-        <groupId>kira.boot</groupId>
+        <groupId>org.kira</groupId>
+        <artifactId>kira-starter-parent</artifactId>
         <version>1.0.0</version>
     </parent>
 
-
     <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <docker.registry.url>101.35.251.170</docker.registry.url>
+        <docker.registry.host>http://${docker.registry.url}:2375</docker.registry.host>
     </properties>
-
 
     <dependencies>
 
@@ -30,6 +28,61 @@
         </dependency>
 
     </dependencies>
+
+
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Implementation-Version>${project.version}</Implementation-Version>
+                            <Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+                <version>3.2.0</version>
+            </plugin>
+
+
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <configuration>
+                    <!--指定生成的镜像名 镜像名称:Tag -->
+                    <imageName>${project.artifactId}:${project.version}</imageName>
+                    <!-- 指定 Dockerfile 路径-->
+                    <dockerDirectory>${project.basedir}/docker</dockerDirectory>
+                    <!--指定远程 docker api地址-->
+                    <dockerHost>${docker.registry.host}</dockerHost>
+                    <!-- 这里是复制 jar 包到 docker 容器指定目录配置 -->
+                    <resources>
+                        <resource>
+                            <targetPath>/</targetPath>
+                            <!--jar 包所在的路径  此处配置的 即对应 target 目录-->
+                            <directory>${project.build.directory}</directory>
+                            <!-- 需要包含的 jar包 ，这里对应的是 Dockerfile中添加的文件名　-->
+                            <include>${project.build.finalName}.jar</include>
+                        </resource>
+                    </resources>
+                    <registryUrl>${docker.registry.url}</registryUrl>
+                    <serverId>${docker.registry.url}</serverId>
+                    <pushImage>true</pushImage>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
 
 
 </project>
